@@ -91,6 +91,10 @@ async def db_session(setup_database):
             await session.close()
 
 @pytest.fixture(scope="function")
+def db(db_session):
+    return db_session
+
+@pytest.fixture(scope="function")
 async def locked_user(db_session):
     unique_email = fake.email()
     user_data = {

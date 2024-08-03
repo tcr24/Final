@@ -1,28 +1,27 @@
-# app/tests/utils/user.py
-
-from sqlalchemy.orm import Session
+from typing import Dict
 from fastapi.testclient import TestClient
-from app import crud, schemas
-from app.models import User
-from app.tests.utils.utils import random_email, random_lower_string
-from app.core.config import settings
+from sqlalchemy.orm import Session
+from app.schemas.user_schemas import UserCreate
+from app.models.user import User
+from app.services.user_service import UserService
 
-def create_random_user(db: Session, *, is_superuser: bool = False) -> User:
-    email = random_email()
-    password = random_lower_string()
-    user_in = schemas.UserCreate(
-        email=email,
-        password=password,
+def create_random_user(db: Session, is_superuser: bool = False) -> User:
+    user_in = UserCreate(
+        email="user@example.com",
+        password="password123",
+        full_name="Test User",
+        nickname="testuser",
+        is_active=True,
         is_superuser=is_superuser,
     )
-    user = crud.user.create(db, obj_in=user_in)
+    user = UserService.create(db, user_in)
     return user
 
 def authentication_token_from_email(client: TestClient, email: str) -> str:
     login_data = {
         "username": email,
-        "password": settings.TEST_USER_PASSWORD,
+        "password": "password123",
     }
-    r = client.post(f"{settings.API_V1_STR}/login/access-token", data=login_data)
-    tokens = r.json()
+    response = client.post("/login/access-token", data=login_data)
+    tokens = response.json()
     return tokens["access_token"]

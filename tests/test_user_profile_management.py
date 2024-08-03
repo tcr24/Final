@@ -1,11 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
-from settings.config import settings
+from app.settings.config import settings
 from app.main import app
 from app.tests.utils.user import create_random_user, authentication_token_from_email
 from sqlalchemy.orm import Session
-from app import schemas
 from app.models.user import User  # Correct the import path
+from app import schemas
+
 
 
 client = TestClient(app)

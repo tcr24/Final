@@ -6,12 +6,11 @@ from app.database import Database
 from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
 from app.services.jwt_service import decode_token
-from settings.config import Settings
-from fastapi import Depends
+from app.settings.config import settings
 
-def get_settings() -> Settings:
+def get_settings():
     """Return application settings."""
-    return Settings()
+    return settings
 
 def get_email_service() -> EmailService:
     template_manager = TemplateManager()
@@ -25,7 +24,6 @@ async def get_db() -> AsyncSession:
             yield session
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 

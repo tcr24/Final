@@ -1,27 +1,37 @@
-from typing import Dict
-from fastapi.testclient import TestClient
+from app.models.user_model import User, UserRole
+from app.schemas.user import UserCreate
+from app.utils.security import hash_password
 from sqlalchemy.orm import Session
-from app.schemas.user_schemas import UserCreate
-from app.models.user import User
-from app.services.user_service import UserService
+import random
+import string
 
-def create_random_user(db: Session, is_superuser: bool = False) -> User:
+def create_random_user(db_session: Session, is_admin: bool = False) -> User:
+    email = "".join(random.choices(string.ascii_lowercase + string.digits, k=10)) + "@example.com"
     user_in = UserCreate(
-        email="user@example.com",
+        email=email,
         password="password123",
-        full_name="Test User",
-        nickname="testuser",
-        is_active=True,
-        is_superuser=is_superuser,
+        first_name="First",
+        last_name="Last",
+        nickname="nickname"
     )
-    user = UserService.create(db, user_in)
+    user = User(
+        email=user_in.email,
+        hashed_password=hash_password(user_in.password),
+        first_name=user_in.first_name,
+        last_name=user_in.last_name,
+        nickname=user_in.nickname,
+        role=UserRole.ADMIN if is_admin else UserRole.USER,
+        email_verified=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
     return user
 
+from fastapi.testclient import TestClient
+
 def authentication_token_from_email(client: TestClient, email: str) -> str:
-    login_data = {
-        "username": email,
-        "password": "password123",
-    }
-    response = client.post("/login/access-token", data=login_data)
-    tokens = response.json()
-    return tokens["access_token"]
+    data = {"username": email, "password": "password123"}
+    response = client.post(f"{settings.API_V1_STR}/login/access-token", data=data)
+    assert response.status_code == 200
+    return response.json()["access_token"]

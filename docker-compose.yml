@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "5050:80" # Expose PgAdmin on port 5050 of the host
+      - "5050:80"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     networks:
@@ -37,6 +37,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    env_file:
+      - .env
     networks:
       - app-network
 

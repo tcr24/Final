@@ -1,25 +1,19 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from pydantic import BaseSettings
 
 Base = declarative_base()
 
-class Database:
-    """Handles database connections and sessions."""
-    _engine = None
-    _session_factory = None
+class Settings(BaseSettings):
+    database_url: str
 
-    @classmethod
-    def initialize(cls, database_url: str, echo: bool = False):
-        """Initialize the async engine and sessionmaker."""
-        if cls._engine is None:  # Ensure engine is created once
-            cls._engine = create_async_engine(database_url, echo=echo, future=True)
-            cls._session_factory = sessionmaker(
-                bind=cls._engine, class_=AsyncSession, expire_on_commit=False, future=True
-            )
+settings = Settings(_env_file='.env')
 
-    @classmethod
-    def get_session_factory(cls):
-        """Returns the session factory, ensuring it's initialized."""
-        if cls._session_factory is None:
-            raise ValueError("Database not initialized. Call `initialize()` first.")
-        return cls._session_factory
+engine = create_async_engine(settings.database_url, echo=True)
+AsyncSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+)
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session

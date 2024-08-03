@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 import logging
-from app.dependencies import get_settings
 from app.routers import users
 from fastapi.responses import JSONResponse
 

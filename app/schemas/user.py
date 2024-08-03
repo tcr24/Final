@@ -1,15 +1,16 @@
-from pydantic import BaseModel, EmailStr, constr
-from typing import Optional
+# app/schemas/user.py
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: constr(min_length=8)
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    nickname: Optional[str] = None
+from pydantic import BaseModel
 
-class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    nickname: Optional[str] = None
-    password: Optional[constr(min_length=8)] = None
+class UserBase(BaseModel):
+    email: str
+    nickname: str
+
+class UserCreate(UserBase):
+    password: str
+
+class UserRead(UserBase):
+    id: int
+
+    class Config:
+        orm_mode = True  # For SQLAlchemy models compatibility

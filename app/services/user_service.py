@@ -65,7 +65,7 @@ class UserService:
             new_user.nickname = new_nickname
             logger.info(f"User Role: {new_user.role}")
             user_count = await cls.count(session)
-            new_user.role = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS            
+            new_user.role = UserRole.ADMIN if user_count == 0 else UserRole.ANONYMOUS
             if new_user.role == UserRole.ADMIN:
                 new_user.email_verified = True
 
@@ -121,7 +121,7 @@ class UserService:
     @classmethod
     async def register_user(cls, session: AsyncSession, user_data: Dict[str, str], get_email_service) -> Optional[User]:
         return await cls.create(session, user_data, get_email_service)
-    
+
 
     @classmethod
     async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
@@ -188,7 +188,7 @@ class UserService:
         result = await session.execute(query)
         count = result.scalar()
         return count
-    
+
     @classmethod
     async def unlock_user_account(cls, session: AsyncSession, user_id: UUID) -> bool:
         user = await cls.get_by_id(session, user_id)
@@ -199,3 +199,24 @@ class UserService:
             await session.commit()
             return True
         return False
+
+    # Utility function to create a random user
+    @classmethod
+    def create_random_user(cls, db: Session, is_superuser: bool = False) -> User:
+        user_in = UserCreate(
+            email=f"user{random.randint(1, 10000)}@test.com",
+            password="password",
+            is_superuser=is_superuser
+        )
+        return cls.create(db=db, user_data=user_in.model_dump(), email_service=get_email_service())
+
+    # Utility function to obtain an authentication token from an email
+    @classmethod
+    def authentication_token_from_email(cls, client: TestClient, email: str) -> str:
+        login_data = {
+            "username": email,
+            "password": "password"
+        }
+        response = client.post("/login/access-token", data=login_data)
+        tokens = response.json()
+        return tokens["access_token"]
